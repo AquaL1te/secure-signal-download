@@ -32,7 +32,7 @@ fi
 
 
 # Verify the downloaded InRelease file with the Signal public GPG key
-if ! gpg --quiet --verify "$tmpdir/InRelease" 2>/dev/null 2>/dev/null; then
+if ! gpg --quiet --verify "$tmpdir/InRelease" 2>/dev/null; then
   custom_error "The GPG signature of the InRelease file is invalid!"
 fi
 

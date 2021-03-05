@@ -50,7 +50,7 @@ while read -r packages_meta_hash _ packages_meta_file; do
 done < "$tmpdir/InRelease"
 
 
-# Continue if the InRelease file is verfied
+# Continue if the Packages file is verfied
 if [[ $packages_file_verified = "yes" ]]; then
   while IFS=': ' read -r key value; do
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version

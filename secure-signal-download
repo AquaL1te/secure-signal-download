@@ -55,7 +55,8 @@ if [[ $packages_file_verified = "yes" ]]; then
   while IFS=': ' read -r key value; do
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version
     if [[ $key = "Filename" ]]; then
-      if ! wget --quiet --output-document signal-desktop.deb "$repo_url/$value" 2>/dev/null; then
+      signal_file="$value"
+      if ! wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null; then
         custom_error "Could not download signal-desktop.deb from Packages metadata"
       fi
     fi
@@ -67,7 +68,7 @@ if [[ $packages_file_verified = "yes" ]]; then
   
       # Verify the hash of the downloaded signal-desktop.deb file with the hash from the verfied (Packages) metadata
       if [[ $signal_file_hash = "$value" ]]; then
-        custom_info "The signal-desktop.deb file is verified as:" "$signal_file_hash"
+        custom_info "$signal_file" "is verified as:" "$signal_file_hash"
         break
       fi
     fi

@@ -3,74 +3,75 @@
 custom_error() { printf 'ERROR %s\n' "$*" >&2; }
 custom_info() { printf 'INFO %s\n' "$*"; }
 
+tmpdir=$(mktemp -d)
 repo_url="https://updates.signal.org/desktop/apt"
 repo_dist="xenial"
 packages_url="main/binary-amd64/Packages"
 
 
 # As of Wget 1.10, the default is to verify the server's certificate against the recognized certificate authorities
-if ! command wget --quiet --output-document keys.asc "$repo_url"/keys.asc 2>/dev/null; then
+if ! wget --quiet --output-document "$tmpdir/keys.asc" "$repo_url"/keys.asc 2>/dev/null; then
   custom_error "Could not download the Signal public key"
 fi
 
 
-if ! command wget --quiet --output-document InRelease "$repo_url"/dists/"$repo_dist"/InRelease 2>/dev/null; then
+if ! wget --quiet --output-document "$tmpdir/InRelease" "$repo_url"/dists/"$repo_dist"/InRelease 2>/dev/null; then
   custom_error "Could not download the InRelease file"
 fi
 
 
-if ! command wget --quiet --output-document Packages "$repo_url/dists/$repo_dist/$packages_url" 2>/dev/null; then
+if ! wget --quiet --output-document "$tmpdir/Packages" "$repo_url/dists/$repo_dist/$packages_url" 2>/dev/null; then
   custom_error "Could not download the Packages file"
 fi
 
 
 # Import the downloaded Signal GPG key
-if ! command gpg --quiet --import keys.asc 2>/dev/null; then
+if ! gpg --quiet --import "$tmpdir/keys.asc" 2>/dev/null; then
   custom_error "Could not import Signal public key into GPG"
 fi
 
 
 # Verify the downloaded InRelease file with the Signal public GPG key
-if ! command gpg --quiet --verify InRelease 2>/dev/null 2>/dev/null; then
+if ! gpg --quiet --verify "$tmpdir/InRelease" 2>/dev/null 2>/dev/null; then
   custom_error "The GPG signature of the InRelease file is invalid!"
 fi
 
 
 # Get the hash of the downloaded Packages file
-read -r packages_file_hash _ < <(sha256sum Packages)
+read -r packages_file_hash _ < <(sha256sum "$tmpdir/Packages")
 
 
 while read -r packages_meta_hash _ packages_meta_file; do
   # Verify the hash of the downloaded Packages file with the hash from the verified (InRelease) metadata
-  if [[ "$packages_file_hash" == "$packages_meta_hash" && "$packages_meta_file" == "$packages_url" ]]; then
+  if [[ $packages_file_hash = "$packages_meta_hash" && $packages_meta_file = "$packages_url" ]]; then
     packages_file_verified="yes"
     break
   fi
-done < InRelease
+done < "$tmpdir/InRelease"
 
 
 # Continue if the InRelease file is verfied
-if [[ "$packages_file_verified" == "yes" ]]; then
+if [[ $packages_file_verified = "yes" ]]; then
   while IFS=': ' read -r key value; do
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version
-    if [[ "$key" == "Filename" ]]; then
-      if ! command wget --quiet --output-document signal-desktop.deb "$repo_url/$value" 2>/dev/null; then
+    if [[ $key = "Filename" ]]; then
+      if ! wget --quiet --output-document signal-desktop.deb "$repo_url/$value" 2>/dev/null; then
         custom_error "Could not download signal-desktop.deb from Packages metadata"
       fi
     fi
   
     # When the first 'SHA256' line is found in the Packages file...
-    if [[ "$key" == "SHA256" ]]; then
+    if [[ $key = "SHA256" ]]; then
       # Get the hash of the downloaded signal-desktop.deb file and...
       read -r signal_file_hash _ < <(sha256sum signal-desktop.deb)
   
       # Verify the hash of the downloaded signal-desktop.deb file with the hash from the verfied (Packages) metadata
-      if [[ "$signal_file_hash" == "$value" ]]; then
+      if [[ $signal_file_hash = "$value" ]]; then
         custom_info "The signal-desktop.deb file is verified as:" "$signal_file_hash"
       fi
       break
     fi
-  done < Packages
+  done < "$tmpdir/Packages"
 fi
 
-command rm --force keys.asc InRelease Packages
+rm --force --recursive "$tmpdir"

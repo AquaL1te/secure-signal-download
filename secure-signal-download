@@ -68,8 +68,8 @@ if [[ $packages_file_verified = "yes" ]]; then
       # Verify the hash of the downloaded signal-desktop.deb file with the hash from the verfied (Packages) metadata
       if [[ $signal_file_hash = "$value" ]]; then
         custom_info "The signal-desktop.deb file is verified as:" "$signal_file_hash"
+        break
       fi
-      break
     fi
   done < "$tmpdir/Packages"
 fi

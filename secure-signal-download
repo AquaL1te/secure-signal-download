@@ -1,6 +1,6 @@
 #!/bin/bash
 
-custom_error() { printf 'ERROR %s\n' "$*" >&2; }
+custom_error() { local retval=$?; printf 'ERROR %s\n' "$*" >&2; exit "$retval"; }
 custom_info() { printf 'INFO %s\n' "$*"; }
 
 tmpdir=$(mktemp -d)

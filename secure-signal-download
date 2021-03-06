@@ -9,6 +9,10 @@ repo_dist="xenial"
 packages_url="main/binary-amd64/Packages"
 
 
+# Remove the previously downloaded Signal installer
+rm --force signal-desktop.deb
+
+
 # As of Wget 1.10, the default is to verify the server's certificate against the recognized certificate authorities
 wget --quiet --output-document "$tmpdir/keys.asc" "$repo_url"/keys.asc 2>/dev/null || \
   custom_error "Could not download the Signal public key"

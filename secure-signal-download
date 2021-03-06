@@ -10,31 +10,23 @@ packages_url="main/binary-amd64/Packages"
 
 
 # As of Wget 1.10, the default is to verify the server's certificate against the recognized certificate authorities
-if ! wget --quiet --output-document "$tmpdir/keys.asc" "$repo_url"/keys.asc 2>/dev/null; then
+wget --quiet --output-document "$tmpdir/keys.asc" "$repo_url"/keys.asc 2>/dev/null || \
   custom_error "Could not download the Signal public key"
-fi
 
-
-if ! wget --quiet --output-document "$tmpdir/InRelease" "$repo_url"/dists/"$repo_dist"/InRelease 2>/dev/null; then
+wget --quiet --output-document "$tmpdir/InRelease" "$repo_url"/dists/"$repo_dist"/InRelease 2>/dev/null || \
   custom_error "Could not download the InRelease file"
-fi
 
-
-if ! wget --quiet --output-document "$tmpdir/Packages" "$repo_url/dists/$repo_dist/$packages_url" 2>/dev/null; then
+wget --quiet --output-document "$tmpdir/Packages" "$repo_url/dists/$repo_dist/$packages_url" 2>/dev/null || \
   custom_error "Could not download the Packages file"
-fi
 
 
 # Import the downloaded Signal GPG key
-if ! gpg --quiet --import "$tmpdir/keys.asc" 2>/dev/null; then
+gpg --quiet --import "$tmpdir/keys.asc" 2>/dev/null || \
   custom_error "Could not import Signal public key into GPG"
-fi
-
 
 # Verify the downloaded InRelease file with the Signal public GPG key
-if ! gpg --quiet --verify "$tmpdir/InRelease" 2>/dev/null; then
+gpg --quiet --verify "$tmpdir/InRelease" 2>/dev/null || \
   custom_error "The GPG signature of the InRelease file is invalid!"
-fi
 
 
 # Get the hash of the downloaded Packages file
@@ -56,9 +48,8 @@ if [[ $packages_file_verified = "yes" ]]; then
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version
     if [[ $key = "Filename" ]]; then
       signal_file="$value"
-      if ! wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null; then
+      wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null || \
         custom_error "Could not download signal-desktop.deb from Packages metadata"
-      fi
     fi
   
     # When the first 'SHA256' line is found in the Packages file...

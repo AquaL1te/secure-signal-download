@@ -70,4 +70,6 @@ if [[ $packages_file_verified = "yes" ]]; then
   done < "$tmpdir/Packages"
 fi
 
+
+# Remove the temporary downloaded files
 rm --force --recursive "$tmpdir"

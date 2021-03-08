@@ -52,8 +52,12 @@ if [[ $packages_file_verified = "yes" ]]; then
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version
     if [[ $key = "Filename" ]]; then
       signal_file="$value"
-      wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null || \
-        custom_error "Could not download signal-desktop.deb from Packages metadata"
+      signal_file_basename="$(basename "$value")"
+
+      if [[ ${signal_file_basename%%_*} = "signal-desktop" ]]; then
+        wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null || \
+          custom_error "Could not download signal-desktop.deb from Packages metadata"
+      fi
     fi
   
     # When the first 'SHA256' line is found in the Packages file...
@@ -63,7 +67,7 @@ if [[ $packages_file_verified = "yes" ]]; then
   
       # Verify the hash of the downloaded signal-desktop.deb file with the hash from the verfied (Packages) metadata
       if [[ $signal_file_hash = "$value" ]]; then
-        custom_info "$(basename "$signal_file")" "==" "$signal_file_hash"
+        custom_info "$signal_file_basename" "==" "$signal_file_hash"
         break
       fi
     fi

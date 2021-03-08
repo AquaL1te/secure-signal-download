@@ -51,11 +51,10 @@ if [[ $packages_file_verified = "yes" ]]; then
   while IFS=': ' read -r key value; do
     # When the first 'Filename' line is found in the Packages file, get the signal-desktop.deb URL to download the latest version
     if [[ $key = "Filename" ]]; then
-      signal_file="$value"
       signal_file_basename="$(basename "$value")"
 
       if [[ ${signal_file_basename%%_*} = "signal-desktop" ]]; then
-        wget --quiet --output-document signal-desktop.deb "$repo_url/$signal_file" 2>/dev/null || \
+        wget --quiet --output-document signal-desktop.deb "$repo_url/$value" 2>/dev/null || \
           custom_error "Could not download signal-desktop.deb from Packages metadata"
       fi
     fi
